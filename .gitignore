@@ -34,3 +34,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prediction-scraper specific
+/data/
+/cache/
+*.log
+.vscode/
+.idea/
+
+# API credentials (double-check)
+*-credentials.json
+*.key
+*.pem
