@@ -242,6 +242,63 @@ export class ScraperAggregator {
   }
 
   /**
+   * Get events that impact SPY (S&P 500)
+   */
+  async getSPYImpactEvents(limit: number = 20): Promise<AggregatedOdds[]> {
+    const allEvents = await this.fetchAllEvents();
+
+    // Filter for SPY-tagged events
+    const spyEvents = allEvents.filter((event) => event.tags.includes('SPY'));
+
+    const aggregated = await this.getAggregatedOdds(spyEvents);
+    return aggregated.slice(0, limit);
+  }
+
+  /**
+   * Get events that impact QQQ (Nasdaq-100)
+   */
+  async getQQQImpactEvents(limit: number = 20): Promise<AggregatedOdds[]> {
+    const allEvents = await this.fetchAllEvents();
+
+    // Filter for QQQ-tagged events
+    const qqqEvents = allEvents.filter((event) => event.tags.includes('QQQ'));
+
+    const aggregated = await this.getAggregatedOdds(qqqEvents);
+    return aggregated.slice(0, limit);
+  }
+
+  /**
+   * Get events by specific category with tag filtering
+   */
+  async getEventsByFilters(options: {
+    category?: EventCategory;
+    tags?: string[];
+    minImpactScore?: number;
+    limit?: number;
+  }): Promise<AggregatedOdds[]> {
+    const { category, tags, minImpactScore, limit = 50 } = options;
+
+    let events = await this.fetchAllEvents(category);
+
+    // Filter by tags if specified
+    if (tags && tags.length > 0) {
+      events = events.filter((event) =>
+        tags.some((tag) => event.tags.includes(tag))
+      );
+    }
+
+    const aggregated = await this.getAggregatedOdds(events);
+
+    // Filter by impact score if specified
+    let filtered = aggregated;
+    if (minImpactScore !== undefined) {
+      filtered = aggregated.filter((item) => item.impactScore.score >= minImpactScore);
+    }
+
+    return filtered.slice(0, limit);
+  }
+
+  /**
    * Disable caching (useful for testing)
    */
   disableCache(): void {
