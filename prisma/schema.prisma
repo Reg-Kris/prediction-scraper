@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Historical prediction snapshots (daily captures)
+model PredictionSnapshot {
+  id                String   @id @default(uuid())
+  eventId           String   @map("event_id")
+  eventTitle        String   @map("event_title")
+  category          String
+  snapshotDate      DateTime @default(now()) @map("snapshot_date")
+  closeDate         DateTime @map("close_date")
+  probability       Float
+  impactScore       Int      @map("impact_score")
+  vixCorrelation    Float?   @map("vix_correlation")
+  sources           String   // JSON array of source names
+  sourceCount       Int      @default(0) @map("source_count")
+  confidence        Float?   // Measure of agreement between sources
+  tags              String?  // JSON array of tags (SPY, QQQ, etc.)
+
+  // Index for fast queries
+  @@index([eventId])
+  @@index([snapshotDate])
+  @@index([category])
+  @@index([closeDate])
+  @@map("prediction_snapshots")
+}
+
+// Event resolutions (final outcomes)
+model EventResolution {
+  id            String   @id @default(uuid())
+  eventId       String   @unique @map("event_id")
+  eventTitle    String   @map("event_title")
+  resolvedDate  DateTime @default(now()) @map("resolved_date")
+  outcome       Boolean  // true = event happened, false = didn't happen
+  notes         String?
+
+  // Accuracy metrics
+  finalProbability    Float?  @map("final_probability")    // Last snapshot probability
+  brierScore          Float?  @map("brier_score")          // Calculated accuracy score
+  calibrationError    Float?  @map("calibration_error")
+  totalSnapshots      Int     @default(0) @map("total_snapshots")
+
+  @@index([eventId])
+  @@index([resolvedDate])
+  @@map("event_resolutions")
+}
