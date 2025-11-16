@@ -5,9 +5,9 @@ const nextConfig = {
   env: {
     APP_NAME: 'Prediction Market Aggregator',
   },
-  // Enable experimental features if needed
+  // Enable instrumentation for server initialization hooks
   experimental: {
-    // serverActions: true,
+    instrumentationHook: true,
   },
 }
 
