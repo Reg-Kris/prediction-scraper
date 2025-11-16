@@ -93,53 +93,95 @@ prediction-scraper/
 
 ### Primary Sources
 
-**1. Polymarket**
+**1. Polymarket** ⭐ PRIMARY
 - Type: Decentralized prediction market (blockchain-based)
-- API: Public API available
-- Events: Elections, economics, current events
+- API: Gamma REST API at `https://gamma-api.polymarket.com/`
+- Docs: https://docs.polymarket.com/developers/gamma-markets-api/overview
+- Events: Elections, economics, crypto, current events
 - Data format: JSON
-- Rate limits: To be determined
-- Authentication: API key may be required
+- Rate limits: 1,000 calls/hour (free tier), WebSocket available ($99/mo premium)
+- Authentication: Optional for basic reads, API key for premium features
+- Special features: GraphQL API available for blockchain data via Bitquery
+- **Implementation Priority**: HIGH - Most comprehensive market data
 
-**2. Kalshi**
+**2. Kalshi** ⭐ PRIMARY
 - Type: CFTC-regulated prediction market
-- API: REST API available
-- Events: Economic data, Fed policy, elections
+- API: REST API at `https://api.elections.kalshi.com/trade-api/v2`
+- Docs: https://docs.kalshi.com/
+- Events: ALL markets (economics, climate, tech, entertainment, elections, Fed policy)
 - Data format: JSON
-- Rate limits: Subject to API terms
-- Authentication: API key required
+- Rate limits: Subject to API terms (public endpoints available without auth)
+- Authentication: API key required for trading, optional for market data
+- Special features: Official CFTC regulation, high liquidity markets
+- **Implementation Priority**: HIGH - Best for Fed policy and economic events
 
-**3. PredictIt**
-- Type: Academic prediction market
-- API: Public API with limitations
-- Events: Political events, elections
+**3. Metaculus** ⭐ PRIMARY
+- Type: Community forecasting platform
+- API: REST API at `https://www.metaculus.com/api/`
+- Docs: Official Python library at github.com/Metaculus/forecasting-tools
+- Events: Long-term forecasts, geopolitical events, scientific questions
 - Data format: JSON
-- Rate limits: Conservative (respect ToS)
-- Authentication: May require registration
+- Rate limits: Generous (community-focused)
+- Authentication: Optional for reading public forecasts
+- Special features: Aggregated community predictions, high-quality forecasters
+- **Implementation Priority**: MEDIUM - Best for longer-term forecasts
 
-**4. Metaculus**
-- Type: Forecasting platform
-- API: Public API available
-- Events: Long-term forecasts, current events
+**4. PredictIt**
+- Type: Political prediction market (CFTC-approved as of Sept 2025)
+- API: Simple REST API
+  - All markets: `https://www.predictit.org/api/marketdata/all/`
+  - Individual: `https://www.predictit.org/api/marketdata/markets/{id}`
+- Docs: https://predictit.freshdesk.com/support/solutions/articles/12000001878
+- Events: Political events, elections, Supreme Court, Cabinet
 - Data format: JSON
-- Rate limits: To be determined
-- Authentication: May be optional for reading
+- Rate limits: Non-commercial use with attribution
+- Authentication: Not required for market data
+- Special features: Investment limits raised to $3,500 per contract (2025)
+- **Implementation Priority**: MEDIUM - Specialized for US politics
 
-**5. Federal Reserve Economic Data (FRED)**
-- Type: Official economic data
-- API: FRED API
-- Events: Employment, inflation, economic indicators
+**5. Manifold Markets**
+- Type: Play-money prediction market (open source)
+- API: REST API at `https://api.manifold.markets/v0/`
+- Docs: https://docs.manifold.markets/api
+- Events: Wide variety (politics, tech, AI, personal questions)
+- Data format: JSON
+- Rate limits: Very generous (community platform)
+- Authentication: Not required for reads
+- Special features: Fully open source, bulk data downloads available
+- GitHub: github.com/manifoldmarkets/manifold
+- **Implementation Priority**: LOW - Play money, good for testing
+
+**6. Federal Reserve Economic Data (FRED)**
+- Type: Official US economic data
+- API: REST API at `https://api.stlouisfed.org/fred/`
+- Docs: https://fred.stlouisfed.org/docs/api/
+- Events: Employment, inflation, GDP, economic indicators
 - Data format: JSON/XML
-- Rate limits: Generous
-- Authentication: Free API key required
+- Rate limits: Very generous
+- Authentication: Free API key required (register at https://fred.stlouisfed.org/)
+- **Implementation Priority**: HIGH - Essential for economic context
 
-**6. CME FedWatch Tool**
-- Type: Fed funds futures-based probability tool
-- Method: Web scraping (no official API)
+**7. CME FedWatch Tool**
+- Type: Fed funds futures-based probability calculator
+- URL: https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html
+- Method: Web scraping OR use pyfedwatch Python package
+- GitHub: https://github.com/ARahimiQuant/pyfedwatch
 - Events: FOMC meeting rate decision probabilities
-- Data format: HTML parsing
-- Rate limits: Be respectful
+- Data format: HTML parsing or computed from Fed Funds futures
+- Rate limits: Be respectful with scraping
 - Authentication: Not required
+- **Implementation Priority**: HIGH - Critical for Fed rate predictions
+
+**8. Reddit (Sentiment Analysis)** 🆕
+- Type: Social sentiment data source
+- API: Reddit API via PRAW (Python Reddit API Wrapper)
+- Docs: https://praw.readthedocs.io/
+- Subreddits: r/wallstreetbets, r/algotrading, r/options, r/SPACs
+- Data format: JSON
+- Rate limits: 60 requests per minute (OAuth)
+- Authentication: Reddit API credentials required
+- Special features: Real-time sentiment, retail trader positioning
+- **Implementation Priority**: LOW - Supplementary data
 
 ### Data Aggregation Strategy
 
@@ -148,6 +190,291 @@ prediction-scraper/
 3. **Aggregate** using weighted average or median
 4. **Store** historical data for trend analysis
 5. **Display** with source attribution and confidence intervals
+
+---
+
+## System Architecture & Implementation Plan
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   SINGLE PAGE DASHBOARD (Next.js)               │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐      │
+│  │  Fed Policy   │  │  Elections    │  │  Economic     │      │
+│  │  Tracker      │  │  Odds         │  │  Events       │      │
+│  │  (CME/Kalshi) │  │(Polymarket/PI)│  │  (FRED)       │      │
+│  └───────────────┘  └───────────────┘  └───────────────┘      │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │     Aggregated Market Impact Analysis                   │  │
+│  │     SPY/QQQ Volatility • Event Timeline • Confidence    │  │
+│  └─────────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │     Real-time Charts (Recharts/Tremor)                  │  │
+│  │     7-day trends • 30-day history • Source comparison   │  │
+│  └─────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│              CLIENT-SIDE STATE (TanStack Query)                 │
+│  • 5-min cache for recent events    • Auto-refetch             │
+│  • 15-min cache for distant events  • Optimistic updates       │
+│  • Stale-while-revalidate pattern   • Error boundaries         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    NEXT.JS API ROUTES                           │
+│  /api/markets/fed-policy    /api/markets/elections              │
+│  /api/markets/economic      /api/markets/aggregate              │
+│  /api/events/[id]           /api/health                         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│               SERVER-SIDE SERVICES LAYER                        │
+│  ┌──────────────────┐  ┌──────────────────┐                   │
+│  │ Aggregation Svc  │  │  Normalization   │                   │
+│  │ • Weighted avg   │  │  • Format convert│                   │
+│  │ • Median calc    │  │  • Probability   │                   │
+│  │ • Confidence     │  │  • Timestamp sync│                   │
+│  └──────────────────┘  └──────────────────┘                   │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │           In-Memory Cache (Node.js Map)                  │  │
+│  │           TTL: 5min (recent) / 15min (distant)           │  │
+│  │           Optional: Redis for production scaling         │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                     SCRAPER SERVICES                            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+│  │Polymarket│ │  Kalshi  │ │Metaculus │ │PredictIt │         │
+│  │  Gamma   │ │   REST   │ │   REST   │ │   REST   │         │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐                       │
+│  │ Manifold │ │   FRED   │ │CME Watch │                       │
+│  │   REST   │ │   REST   │ │  Scraper │                       │
+│  └──────────┘ └──────────┘ └──────────┘                       │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │            Rate Limiter (per-source config)             │  │
+│  │  Polymarket: 10 req/s  |  Kalshi: 5 req/s               │  │
+│  │  PredictIt: 2 req/s    |  Others: 10 req/s              │  │
+│  └─────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Technology Stack
+
+**Frontend:**
+- **Next.js 14** with App Router (`/app` directory)
+- **React 18** with Server Components where appropriate
+- **TailwindCSS** for styling
+- **Tremor** or **Recharts** for financial charts and dashboards
+- **TanStack Query** (React Query) for data fetching and caching
+- **Zod** for runtime type validation
+- **date-fns** for date handling
+
+**Backend:**
+- **Next.js API Routes** (`/app/api`)
+- **Axios** for HTTP requests
+- **Cheerio** for HTML scraping (CME FedWatch)
+- **Node.js** in-memory cache (production: Redis optional)
+
+**Type Safety:**
+- **TypeScript** with strict mode
+- **Zod** schemas for API response validation
+- Type-safe API route handlers
+
+**Development:**
+- **ESLint** + **Prettier** for code quality
+- **Jest** for unit tests
+- **Playwright** for E2E tests (optional)
+
+### Implementation Phases
+
+**Phase 1: Core Infrastructure** (Current Sprint)
+- ✅ Research APIs and data sources
+- 🔄 Initialize Next.js project with TypeScript
+- 🔄 Set up directory structure
+- 🔄 Create base types and interfaces
+- 🔄 Build single-page dashboard shell
+- 🔄 Implement basic API route structure
+
+**Phase 2: Data Layer** (Next Sprint)
+- Implement scraper classes for each source:
+  - Polymarket scraper
+  - Kalshi scraper
+  - PredictIt scraper
+  - CME FedWatch scraper (highest priority)
+  - FRED scraper
+- Create rate limiter utility
+- Build normalization service
+- Implement aggregation algorithms
+
+**Phase 3: Dashboard & Visualization** (Sprint 3)
+- Create dashboard components:
+  - Fed Policy widget (CME + Kalshi)
+  - Elections widget (Polymarket + PredictIt)
+  - Economic Events widget (FRED + Kalshi)
+  - Aggregated impact analysis
+- Build real-time charts
+- Implement auto-refresh logic
+- Add loading states and error handling
+
+**Phase 4: Polish & Production** (Sprint 4)
+- Add historical data tracking
+- Implement Redis caching (optional)
+- Performance optimization
+- Error monitoring (Sentry optional)
+- Documentation
+- Deployment (Vercel recommended)
+
+### Dashboard Layout Design
+
+**Single Page Structure:**
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  📊 Prediction Market Aggregator for SPY/QQQ Trading     │
+│  Last Updated: 2 minutes ago  •  Auto-refresh: ON        │
+├──────────────────────────────────────────────────────────┤
+│                                                           │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  🏛️ Federal Reserve Policy (Next FOMC: Dec 18)     │ │
+│  │  Current Rate: 4.50-4.75%                          │ │
+│  │                                                     │ │
+│  │  Next Meeting Probabilities:                       │ │
+│  │  ┌──────────────────────────────────────────┐     │ │
+│  │  │ No Change: 65% ████████████████▌         │     │ │
+│  │  │ -25 bps:   30% ███████▌                  │     │ │
+│  │  │ -50 bps:    5% █▌                        │     │ │
+│  │  └──────────────────────────────────────────┘     │ │
+│  │  Sources: CME FedWatch, Kalshi, Polymarket         │ │
+│  │  Confidence: 85% ✓  [7-day trend chart →]          │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                           │
+│  ┌───────────────────┐  ┌───────────────────────────┐  │
+│  │ 🗳️ Elections       │  │ 📈 Economic Events        │  │
+│  │                   │  │                           │  │
+│  │ 2024 Presidential │  │ Next Jobs Report: Dec 6   │  │
+│  │ Market Closed ✓   │  │ Expected: 150K jobs       │  │
+│  │                   │  │ >200K: 35%                │  │
+│  │ 2026 Midterms     │  │ <100K: 20%                │  │
+│  │ House Control:    │  │                           │  │
+│  │ GOP: 58%          │  │ CPI (Dec 11): >3%: 65%    │  │
+│  │ DEM: 42%          │  │                           │  │
+│  └───────────────────┘  └───────────────────────────┘  │
+│                                                           │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  📊 Aggregated Market Impact for SPY/QQQ           │ │
+│  │                                                     │ │
+│  │  High Impact Events (Next 30 Days):                │ │
+│  │  • Dec 6  - Jobs Report        Impact: ⚠️ HIGH    │ │
+│  │  • Dec 11 - CPI Release        Impact: ⚠️ HIGH    │ │
+│  │  • Dec 18 - FOMC Meeting       Impact: 🔴 CRITICAL│ │
+│  │                                                     │ │
+│  │  [30-day volatility forecast chart]                │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                           │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  📉 Historical Odds Trends                          │ │
+│  │  [Interactive line chart showing probability       │ │
+│  │   evolution for selected events across sources]    │ │
+│  └────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Key Features
+
+1. **Real-time Aggregation**: Combine odds from multiple sources with confidence intervals
+2. **SPY/QQQ Impact Scoring**: Automatically score events by likely market impact
+3. **Source Attribution**: Always show which markets contributed to aggregate odds
+4. **Auto-refresh**: Smart refresh rates based on event proximity
+5. **Historical Charts**: 7-day and 30-day trend visualization
+6. **Error Handling**: Graceful degradation if sources unavailable
+7. **Mobile Responsive**: Works on all devices
+
+### SPY/QQQ Impact Scoring Algorithm
+
+```typescript
+// Pseudo-code for impact scoring
+function calculateMarketImpact(event: PredictionMarketEvent): ImpactScore {
+  let score = 0;
+
+  // Base score by category
+  if (event.category === 'FED_POLICY') score = 90;
+  else if (event.category === 'ECONOMIC_DATA') score = 75;
+  else if (event.category === 'ELECTION') score = 60;
+  else if (event.category === 'GOVERNMENT') score = 40;
+
+  // Boost for proximity
+  const daysUntil = getDaysUntil(event.closeDate);
+  if (daysUntil <= 7) score *= 1.3;
+  else if (daysUntil <= 30) score *= 1.1;
+
+  // Boost for high uncertainty (high volatility indicator)
+  const uncertainty = calculateUncertainty(event.odds);
+  if (uncertainty > 0.4) score *= 1.2;
+
+  // Boost for high volume/liquidity
+  const avgVolume = event.odds.reduce((sum, o) => sum + (o.volume || 0), 0) / event.odds.length;
+  if (avgVolume > 1000000) score *= 1.1;
+
+  return {
+    score: Math.min(100, Math.round(score)),
+    level: score > 80 ? 'CRITICAL' : score > 60 ? 'HIGH' : score > 40 ? 'MEDIUM' : 'LOW'
+  };
+}
+```
+
+### Environment Variables Setup
+
+```env
+# Prediction Market API Keys
+POLYMARKET_API_KEY=           # Optional for basic access
+KALSHI_API_KEY=               # Required for Kalshi
+KALSHI_API_SECRET=            # Required for Kalshi
+FRED_API_KEY=                 # Free from fred.stlouisfed.org
+REDDIT_CLIENT_ID=             # Optional - for sentiment
+REDDIT_CLIENT_SECRET=         # Optional - for sentiment
+
+# Rate Limiting Configuration
+RATE_LIMIT_POLYMARKET=10      # requests per second
+RATE_LIMIT_KALSHI=5
+RATE_LIMIT_PREDICTIT=2
+RATE_LIMIT_METACULUS=10
+
+# Caching Configuration
+CACHE_TTL_RECENT_EVENTS=300   # 5 minutes (seconds)
+CACHE_TTL_DISTANT_EVENTS=900  # 15 minutes (seconds)
+REDIS_URL=                    # Optional: redis://localhost:6379
+
+# Feature Flags
+ENABLE_HISTORICAL_DATA=true
+ENABLE_AUTO_REFRESH=true
+ENABLE_REDDIT_SENTIMENT=false
+
+# Categories to Track
+TRACK_FED_POLICY=true
+TRACK_ELECTIONS=true
+TRACK_ECONOMIC_DATA=true
+TRACK_GOVERNMENT=true
+```
+
+### Initial Scrapers Priority
+
+**Must Implement First (MVP):**
+1. ✅ CME FedWatch scraper (Fed policy - CRITICAL for SPY/QQQ)
+2. ✅ Kalshi scraper (Fed + economics)
+3. ✅ Polymarket scraper (broad coverage)
+4. ✅ PredictIt scraper (politics)
+
+**Phase 2:**
+5. FRED scraper (economic data context)
+6. Metaculus scraper (long-term forecasts)
+
+**Phase 3 (Optional):**
+7. Manifold Markets (testing/validation)
+8. Reddit sentiment (supplementary)
 
 ---
 
