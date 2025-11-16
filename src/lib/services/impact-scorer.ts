@@ -52,12 +52,32 @@ export class ImpactScorer {
    * Get base score by event category
    */
   private static getCategoryScore(category: EventCategory): number {
-    const scores: Record<EventCategory, number> = {
+    const scores: Partial<Record<EventCategory, number>> = {
+      // Core categories
       [EventCategory.FED_POLICY]: 90,
       [EventCategory.ECONOMIC_DATA]: 75,
+      [EventCategory.RECESSION]: 85,
+      [EventCategory.VOLATILITY]: 70,
+
+      // Political
       [EventCategory.ELECTION]: 60,
       [EventCategory.GOVERNMENT]: 40,
       [EventCategory.GEOPOLITICAL]: 50,
+
+      // Corporate & regulatory
+      [EventCategory.CORPORATE]: 45,
+      [EventCategory.REGULATORY]: 55,
+
+      // Sector-specific
+      [EventCategory.TECH]: 50,
+      [EventCategory.HEALTHCARE]: 45,
+      [EventCategory.ENERGY]: 50,
+      [EventCategory.FINANCIALS]: 55,
+
+      // Additional
+      [EventCategory.CLIMATE]: 30,
+      [EventCategory.CRYPTO]: 40,
+      [EventCategory.SPORTS]: 10, // Sentiment indicator only
     };
     return scores[category] || 30;
   }
@@ -116,19 +136,107 @@ export class ImpactScorer {
   }
 
   /**
-   * Check if event likely impacts SPY
+   * Check if event likely impacts SPY (S&P 500)
    */
   static impactsSPY(event: PredictionMarketEvent): boolean {
-    const impactKeywords = ['election', 'fed', 'shutdown', 'recession', 'crisis', 'rate', 'cpi', 'jobs'];
+    const { category } = event;
+
+    // High-impact categories for SPY
+    const spyCategories = [
+      EventCategory.FED_POLICY,
+      EventCategory.ECONOMIC_DATA,
+      EventCategory.RECESSION,
+      EventCategory.VOLATILITY,
+      EventCategory.ELECTION,
+      EventCategory.GOVERNMENT,
+      EventCategory.GEOPOLITICAL,
+    ];
+
+    if (spyCategories.includes(category)) {
+      return true;
+    }
+
+    // Keyword-based detection
+    const impactKeywords = [
+      'election',
+      'fed',
+      'federal reserve',
+      'fomc',
+      'shutdown',
+      'recession',
+      'crisis',
+      'rate',
+      'interest rate',
+      'cpi',
+      'inflation',
+      'jobs',
+      'unemployment',
+      'gdp',
+      'economy',
+      'market',
+      's&p 500',
+      'spy',
+      'earnings',
+      'tariff',
+      'trade',
+      'war',
+    ];
+
     const text = `${event.title} ${event.description}`.toLowerCase();
     return impactKeywords.some((keyword) => text.includes(keyword));
   }
 
   /**
-   * Check if event likely impacts QQQ (tech-heavy)
+   * Check if event likely impacts QQQ (Nasdaq-100, tech-heavy)
    */
   static impactsQQQ(event: PredictionMarketEvent): boolean {
-    const impactKeywords = ['tech', 'regulation', 'ai', 'election', 'fed', 'rate', 'china'];
+    const { category } = event;
+
+    // High-impact categories for QQQ
+    const qqqCategories = [
+      EventCategory.TECH,
+      EventCategory.CRYPTO,
+      EventCategory.FED_POLICY,
+      EventCategory.REGULATORY,
+      EventCategory.RECESSION,
+      EventCategory.VOLATILITY,
+    ];
+
+    if (qqqCategories.includes(category)) {
+      return true;
+    }
+
+    // Keyword-based detection (tech-focused)
+    const impactKeywords = [
+      'tech',
+      'technology',
+      'regulation',
+      'antitrust',
+      'ai',
+      'artificial intelligence',
+      'semiconductor',
+      'chip',
+      'election',
+      'fed',
+      'rate',
+      'china',
+      'crypto',
+      'bitcoin',
+      'ethereum',
+      'nasdaq',
+      'qqq',
+      'apple',
+      'microsoft',
+      'google',
+      'amazon',
+      'meta',
+      'nvidia',
+      'tesla',
+      'data',
+      'privacy',
+      'cyber',
+    ];
+
     const text = `${event.title} ${event.description}`.toLowerCase();
     return impactKeywords.some((keyword) => text.includes(keyword));
   }

@@ -66,10 +66,10 @@ export class ScraperAggregator {
 
     // Check cache first
     if (this.cacheEnabled) {
-      const cached = globalCache.get<PredictionMarketEvent[]>(cacheKey);
+      const cached = globalCache.get(cacheKey);
       if (cached) {
         console.log(`[ScraperAggregator] Cache hit for ${cacheKey}`);
-        return cached;
+        return cached as PredictionMarketEvent[];
       }
     }
 
@@ -121,9 +121,9 @@ export class ScraperAggregator {
 
     // Check cache
     if (this.cacheEnabled) {
-      const cached = globalCache.get<MarketOdds[]>(cacheKey);
+      const cached = globalCache.get(cacheKey);
       if (cached) {
-        return cached;
+        return cached as MarketOdds[];
       }
     }
 

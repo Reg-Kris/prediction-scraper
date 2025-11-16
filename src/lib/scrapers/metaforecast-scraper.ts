@@ -363,12 +363,23 @@ export class MetaForecastScraper {
    * Get search terms for a category
    */
   private getCategorySearchTerms(category: EventCategory): string[] {
-    const searchTerms: Record<EventCategory, string[]> = {
+    const searchTerms: Partial<Record<EventCategory, string[]>> = {
       [EventCategory.FED_POLICY]: ['federal reserve', 'fed', 'interest rate', 'fomc'],
       [EventCategory.ECONOMIC_DATA]: ['gdp', 'inflation', 'cpi', 'jobs', 'unemployment'],
+      [EventCategory.RECESSION]: ['recession', 'economic downturn'],
+      [EventCategory.VOLATILITY]: ['vix', 'volatility', 'market crash'],
       [EventCategory.ELECTION]: ['election', 'presidential', 'congress', 'senate'],
       [EventCategory.GOVERNMENT]: ['government', 'shutdown', 'policy'],
       [EventCategory.GEOPOLITICAL]: ['war', 'china', 'russia', 'trade'],
+      [EventCategory.CORPORATE]: ['earnings', 'merger', 'acquisition', 'ipo'],
+      [EventCategory.REGULATORY]: ['fda', 'sec', 'regulatory', 'approval'],
+      [EventCategory.TECH]: ['technology', 'tech', 'ai', 'semiconductor'],
+      [EventCategory.HEALTHCARE]: ['healthcare', 'pharma', 'biotech'],
+      [EventCategory.ENERGY]: ['energy', 'oil', 'gas'],
+      [EventCategory.FINANCIALS]: ['banking', 'financial', 'insurance'],
+      [EventCategory.CLIMATE]: ['climate', 'weather', 'hurricane'],
+      [EventCategory.CRYPTO]: ['crypto', 'bitcoin', 'ethereum'],
+      [EventCategory.SPORTS]: ['sports', 'nfl', 'nba'],
     };
 
     return searchTerms[category] || [];
